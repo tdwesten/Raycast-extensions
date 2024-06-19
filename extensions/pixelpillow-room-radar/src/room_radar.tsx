@@ -19,6 +19,12 @@ type Event = {
   end: Date;
 };
 
+interface FetchResponse {
+  isLoading: boolean;
+  data: Room[];
+  revalidate: unknown;
+}
+
 // Component om de lijst van kamers weer te geven
 export default function Command() {
   const { push } = useNavigation();
@@ -31,26 +37,30 @@ export default function Command() {
     });
   }
 
-  const { isLoading, data } = useFetch<{ isLoading: boolean; data: Room[]; revalidate: unknown }>(url, {
+  const { isLoading, data } = useFetch<FetchResponse>(url, {
     headers: {
       Authorization: "Basic " + Buffer.from(username + ":" + password).toString("base64"),
     },
   });
 
-  const roomData = data?.map((room: Room) => {
-    room.id = nanoid();
+  let roomData: Room[] | undefined;
 
-    const now = new Date();
-    const event = room.events.find((event) => event.start < now && event.end > now);
-    room.availabilityMessage = event ? "In gebruik" : "Beschikbaar";
-    room.availabilityIcon = event ? Icon.Dot : Icon.Dot;
-    room.availability = event
-      ? event.summary + " (" + event.start.toLocaleTimeString() + " -> " + event.end.toLocaleTimeString() + ")"
-      : "Beschikbaar";
+  if (data && Array.isArray(data)) {
+    roomData = data?.map((room: Room) => {
+      room.id = nanoid();
 
-    room.available = event ? true : false;
-    return room;
-  });
+      const now = new Date();
+      const event = room.events.find((event) => event.start < now && event.end > now);
+      room.availabilityMessage = event ? "In gebruik" : "Beschikbaar";
+      room.availabilityIcon = event ? Icon.Dot : Icon.Dot;
+      room.availability = event
+        ? event.summary + " (" + event.start.toLocaleTimeString() + " -> " + event.end.toLocaleTimeString() + ")"
+        : "Beschikbaar";
+
+      room.available = event ? true : false;
+      return room;
+    });
+  }
 
   return (
     <List searchBarPlaceholder="Doorzoek de ruimtes..." isLoading={isLoading}>
