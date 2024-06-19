@@ -11,6 +11,8 @@ type Room = {
   availabilityMessage?: string;
   availabilityIcon?: string;
   events: Event[];
+  upCommingEvent?: Event;
+  floor: string;
 };
 
 type Event = {
@@ -45,9 +47,17 @@ export default function Command() {
     },
   });
 
+  const availabitityMessageUntilNextEvent = (event: Event | undefined) => {
+    if (event) {
+      return "Beschikbaar tot " + new Date(event.start).toLocaleTimeString();
+    }
+
+    return "Beschikbaar";
+  };
+
   let roomData: Room[] | undefined;
 
-  if (data === undefined) {
+  if (data === undefined && !isLoading) {
     return (
       <List>
         <List.EmptyView
@@ -63,17 +73,30 @@ export default function Command() {
       room.id = nanoid();
 
       const now = new Date();
-      const event = room.events.find((event) => event.start < now && event.end > now);
-      room.availabilityMessage = event ? "In gebruik" : "Beschikbaar";
+      const event = room.events.find((event) => new Date(event.start) < now && new Date(event.end) > now);
+      const upCommingEvent = room.events.filter((event) => new Date(event.start) > now);
+      room.upCommingEvent = upCommingEvent.length > 0 ? upCommingEvent[0] : undefined;
+
+      room.availabilityMessage = event ? "In gebruik" : availabitityMessageUntilNextEvent(room.upCommingEvent);
       room.availabilityIcon = event ? Icon.Dot : Icon.Dot;
       room.availability = event
         ? event.summary + " (" + event.start.toLocaleTimeString() + " -> " + event.end.toLocaleTimeString() + ")"
         : "Beschikbaar";
 
-      room.available = event ? true : false;
+      room.available = event ? false : true;
+
       return room;
     });
   }
+
+  const renderSubtitle = (room: Room) => {
+    return (
+      `(${room.floor})` +
+      (room.upCommingEvent
+        ? " - " + room.upCommingEvent?.summary + " @ " + new Date(room.upCommingEvent.start).toLocaleTimeString()
+        : "")
+    );
+  };
 
   return (
     <List searchBarPlaceholder="Doorzoek de ruimtes..." isLoading={isLoading}>
@@ -81,11 +104,11 @@ export default function Command() {
         <List.Item
           key={room.id}
           title={room.name}
-          subtitle={room.availability}
+          subtitle={renderSubtitle(room)}
           accessories={[
             {
               text: { value: room.availabilityMessage },
-              icon: { tintColor: room.available ? Color.Red : Color.Green, source: room.availabilityIcon ?? Icon.Dot },
+              icon: { tintColor: room.available ? Color.Green : Color.Red, source: room.availabilityIcon ?? Icon.Dot },
             },
           ]}
           actions={
