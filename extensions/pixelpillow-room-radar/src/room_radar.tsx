@@ -45,6 +45,17 @@ export default function Command() {
 
   let roomData: Room[] | undefined;
 
+  if (data === undefined) {
+    return (
+      <List>
+        <List.EmptyView
+          icon={{ source: "https://media1.tenor.com/m/4krG6BSnulUAAAAC/malfunction-system-malfunction.gif" }}
+          title="API DOWN! CALL MILAN!"
+        />
+      </List>
+    );
+  }
+
   if (data && Array.isArray(data)) {
     roomData = data?.map((room: Room) => {
       room.id = nanoid();
