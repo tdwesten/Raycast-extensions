@@ -11,7 +11,7 @@ type Room = {
   availabilityMessage?: string;
   availabilityIcon?: string;
   events: Event[];
-  upCommingEvent?: Event;
+  upComingEvent?: Event;
   floor: string;
 };
 
@@ -29,15 +29,15 @@ interface FetchResponse {
   revalidate: unknown;
 }
 
-// Component om de lijst van kamers weer te geven
+// Component to display the list of rooms
 export default function Command() {
   const { push } = useNavigation();
   const { username, password, url } = getPreferenceValues();
 
   if (!username || !password) {
     showToast({
-      title: "Gebruikersnaam en wachtwoord zijn vereist",
-      message: "Stel je gebruikersnaam en wachtwoord in om de kamers weer te geven",
+      title: "Username and password are required",
+      message: "Set your username and password to display the rooms",
     });
   }
 
@@ -49,10 +49,10 @@ export default function Command() {
 
   const availabitityMessageUntilNextEvent = (event: Event | undefined) => {
     if (event) {
-      return "Beschikbaar tot " + new Date(event.start).toLocaleTimeString();
+      return "Available until " + new Date(event.start).toLocaleTimeString();
     }
 
-    return "Beschikbaar";
+    return "Available";
   };
 
   let roomData: Room[] | undefined;
@@ -74,14 +74,14 @@ export default function Command() {
 
       const now = new Date();
       const event = room.events.find((event) => new Date(event.start) < now && new Date(event.end) > now);
-      const upCommingEvent = room.events.filter((event) => new Date(event.start) > now);
-      room.upCommingEvent = upCommingEvent.length > 0 ? upCommingEvent[0] : undefined;
+      const upComingEvent = room.events.filter((event) => new Date(event.start) > now);
+      room.upComingEvent = upComingEvent.length > 0 ? upComingEvent[0] : undefined;
 
-      room.availabilityMessage = event ? "In gebruik" : availabitityMessageUntilNextEvent(room.upCommingEvent);
+      room.availabilityMessage = event ? "In use" : availabitityMessageUntilNextEvent(room.upComingEvent);
       room.availabilityIcon = event ? Icon.Dot : Icon.Dot;
       room.availability = event
         ? event.summary + " (" + event.start.toLocaleTimeString() + " -> " + event.end.toLocaleTimeString() + ")"
-        : "Beschikbaar";
+        : "Available";
 
       room.available = event ? false : true;
 
@@ -92,18 +92,22 @@ export default function Command() {
   const renderSubtitle = (room: Room) => {
     return (
       `(${room.floor})` +
-      (room.upCommingEvent
-        ? " - " + room.upCommingEvent?.summary + " @ " + new Date(room.upCommingEvent.start).toLocaleTimeString()
+      (room.upComingEvent
+        ? " - " + room.upComingEvent?.summary + " @ " + new Date(room.upComingEvent.start).toLocaleTimeString()
         : "")
     );
   };
 
   return (
-    <List searchBarPlaceholder="Doorzoek de ruimtes..." isLoading={isLoading}>
+    <List searchBarPlaceholder="Search for a room..." isLoading={isLoading}>
       {roomData?.map((room: Room) => (
         <List.Item
           key={room.id}
           title={room.name}
+          icon={{
+            source: room.available ? Icon.Circle : Icon.CircleDisabled,
+            tintColor: room.available ? Color.Green : Color.Red,
+          }}
           subtitle={renderSubtitle(room)}
           accessories={[
             {
@@ -113,7 +117,7 @@ export default function Command() {
           ]}
           actions={
             <ActionPanel>
-              <Action title="Bekijk Events" onAction={() => push(<RoomEventList events={room.events} />)} />
+              <Action title="View Events" onAction={() => push(<RoomEventList events={room.events} />)} />
             </ActionPanel>
           }
         />
@@ -124,7 +128,7 @@ export default function Command() {
 
 function RoomEventList({ events }: { events: Event[] }) {
   return (
-    <List>
+    <List searchText="Search for a event">
       {events.length === 0 && (
         <List.EmptyView
           icon={{ source: "https://media1.tenor.com/m/A3uAfeQrWmMAAAAd/nothing-here-searching.gif" }}
@@ -136,6 +140,7 @@ function RoomEventList({ events }: { events: Event[] }) {
         <List.Item
           key={event.summary}
           title={event.summary}
+          icon={Icon.Calendar}
           subtitle={
             new Date(event.start).toDateString() +
             " " +
@@ -146,7 +151,7 @@ function RoomEventList({ events }: { events: Event[] }) {
             new Date(event.start).toLocaleTimeString()
           }
           actions={
-            <ActionPanel>{event.link && <Action.OpenInBrowser title="Bekijk Event" url={event.link} />}</ActionPanel>
+            <ActionPanel>{event.link && <Action.OpenInBrowser title="View Event" url={event.link} />}</ActionPanel>
           }
         />
       ))}
