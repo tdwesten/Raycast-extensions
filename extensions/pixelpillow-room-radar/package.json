@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "pixelpillow-room-radar",
   "title": "Pixelpillow Room Rader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Helps you find an available space at Pixelpillow HQ",
   "icon": "pixelpillow-room-rader.png",
   "owner": "pixelpillow",
