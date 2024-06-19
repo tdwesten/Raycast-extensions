@@ -1,6 +1,6 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "pixelpillow-room-rader",
+  "name": "pixelpillow-room-radar",
   "title": "Pixelpillow Room Rader",
   "version": "1.0.0",
   "description": "Helps you find an available space at Pixelpillow HQ",
@@ -26,7 +26,7 @@
       "label": "Url",
       "type": "textfield",
       "title": "Url",
-      "description": "The url of the Pixelpillow Room Rader resources endpoint",
+      "description": "The url of the Pixelpillow Room Radar resources endpoint",
       "name": "url",
       "required": true
     },
@@ -35,7 +35,7 @@
       "label": "Username",
       "type": "textfield",
       "title": "Username",
-      "description": "Your username for Pixelpillow Room Rader",
+      "description": "Your username for Pixelpillow Room Radar",
       "name": "username",
       "required": true
     },
@@ -45,12 +45,11 @@
       "secure": true,
       "type": "password",
       "title": "Password",
-      "description": "Your password for Pixelpillow Room Rader",
+      "description": "Your password for Pixelpillow Room Radar",
       "name": "password",
       "required": true
     }
   ],
-  "tools": null,
   "dependencies": {
     "@raycast/api": "^1.76.0",
     "@raycast/utils": "^1.16.0",
