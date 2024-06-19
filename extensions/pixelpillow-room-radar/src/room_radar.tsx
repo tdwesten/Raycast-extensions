@@ -14,9 +14,11 @@ type Room = {
 };
 
 type Event = {
+  id: string;
   summary: string;
   start: Date;
   end: Date;
+  link: string;
 };
 
 interface FetchResponse {
@@ -88,7 +90,7 @@ export default function Command() {
           ]}
           actions={
             <ActionPanel>
-              <Action title="Push" onAction={() => push(<RoomEventList events={room.events} />)} />
+              <Action title="Bekijk Events" onAction={() => push(<RoomEventList events={room.events} />)} />
             </ActionPanel>
           }
         />
@@ -107,7 +109,7 @@ function RoomEventList({ events }: { events: Event[] }) {
         />
       )}
 
-      {events.map((event) => (
+      {events.map((event: Event) => (
         <List.Item
           key={event.summary}
           title={event.summary}
@@ -119,6 +121,9 @@ function RoomEventList({ events }: { events: Event[] }) {
             new Date(event.end)?.toDateString() +
             " " +
             new Date(event.start).toLocaleTimeString()
+          }
+          actions={
+            <ActionPanel>{event.link && <Action.OpenInBrowser title="Bekijk Event" url={event.link} />}</ActionPanel>
           }
         />
       ))}
