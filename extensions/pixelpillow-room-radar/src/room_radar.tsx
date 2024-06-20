@@ -65,7 +65,7 @@ export default function Command() {
 
 function RoomEventList({ events }: { events: RoomEvent[] }) {
   return (
-    <List searchText="Search for a event">
+    <List searchBarPlaceholder="Search for a event">
       {events.length === 0 && (
         <List.EmptyView
           icon={{ source: "https://media1.tenor.com/m/A3uAfeQrWmMAAAAd/nothing-here-searching.gif" }}
