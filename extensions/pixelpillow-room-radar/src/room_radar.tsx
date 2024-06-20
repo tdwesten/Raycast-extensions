@@ -1,27 +1,7 @@
-import { Action, ActionPanel, Color, Icon, List, getPreferenceValues, showToast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, getPreferenceValues, useNavigation } from "@raycast/api";
 import { useFetch } from "@raycast/utils";
-import { nanoid } from "nanoid";
-
-type Room = {
-  name: string;
-  id: string;
-  resourceEmail: string;
-  available?: boolean;
-  availability: string;
-  availabilityMessage?: string;
-  availabilityIcon?: string;
-  events: Event[];
-  upComingEvent?: Event;
-  floor: string;
-};
-
-type Event = {
-  id: string;
-  summary: string;
-  start: Date;
-  end: Date;
-  link: string;
-};
+import { Room } from "./room.dto";
+import RoomEvent from "./room_event.dto";
 
 interface FetchResponse {
   isLoading: boolean;
@@ -34,26 +14,11 @@ export default function Command() {
   const { push } = useNavigation();
   const { username, password, url } = getPreferenceValues();
 
-  if (!username || !password) {
-    showToast({
-      title: "Username and password are required",
-      message: "Set your username and password to display the rooms",
-    });
-  }
-
   const { isLoading, data } = useFetch<FetchResponse>(url, {
     headers: {
       Authorization: "Basic " + Buffer.from(username + ":" + password).toString("base64"),
     },
   });
-
-  const availabitityMessageUntilNextEvent = (event: Event | undefined) => {
-    if (event) {
-      return "Available until " + new Date(event.start).toLocaleTimeString();
-    }
-
-    return "Available";
-  };
 
   let roomData: Room[] | undefined;
 
@@ -69,34 +34,10 @@ export default function Command() {
   }
 
   if (data && Array.isArray(data)) {
-    roomData = data?.map((room: Room) => {
-      room.id = nanoid();
-
-      const now = new Date();
-      const event = room.events.find((event) => new Date(event.start) < now && new Date(event.end) > now);
-      const upComingEvent = room.events.filter((event) => new Date(event.start) > now);
-      room.upComingEvent = upComingEvent.length > 0 ? upComingEvent[0] : undefined;
-
-      room.availabilityMessage = event ? "In use" : availabitityMessageUntilNextEvent(room.upComingEvent);
-      room.availabilityIcon = event ? Icon.Dot : Icon.Dot;
-      room.availability = event
-        ? event.summary + " (" + event.start.toLocaleTimeString() + " -> " + event.end.toLocaleTimeString() + ")"
-        : "Available";
-
-      room.available = event ? false : true;
-
-      return room;
+    roomData = data?.map((item) => {
+      return Room.fromJSON(item);
     });
   }
-
-  const renderSubtitle = (room: Room) => {
-    return (
-      `(${room.floor})` +
-      (room.upComingEvent
-        ? " - " + room.upComingEvent?.summary + " @ " + new Date(room.upComingEvent.start).toLocaleTimeString()
-        : "")
-    );
-  };
 
   return (
     <List searchBarPlaceholder="Search for a room..." isLoading={isLoading}>
@@ -104,15 +45,11 @@ export default function Command() {
         <List.Item
           key={room.id}
           title={room.name}
-          icon={{
-            source: room.available ? Icon.Circle : Icon.CircleDisabled,
-            tintColor: room.available ? Color.Green : Color.Red,
-          }}
-          subtitle={renderSubtitle(room)}
+          icon={room.icon}
+          subtitle={room.subTitle}
           accessories={[
             {
               text: { value: room.availabilityMessage },
-              icon: { tintColor: room.available ? Color.Green : Color.Red, source: room.availabilityIcon ?? Icon.Dot },
             },
           ]}
           actions={
@@ -126,7 +63,7 @@ export default function Command() {
   );
 }
 
-function RoomEventList({ events }: { events: Event[] }) {
+function RoomEventList({ events }: { events: RoomEvent[] }) {
   return (
     <List searchText="Search for a event">
       {events.length === 0 && (
@@ -136,20 +73,12 @@ function RoomEventList({ events }: { events: Event[] }) {
         />
       )}
 
-      {events.map((event: Event) => (
+      {events.map((event: RoomEvent) => (
         <List.Item
           key={event.summary}
           title={event.summary}
           icon={Icon.Calendar}
-          subtitle={
-            new Date(event.start).toDateString() +
-            " " +
-            new Date(event.start).toLocaleTimeString() +
-            " -> " +
-            new Date(event.end)?.toDateString() +
-            " " +
-            new Date(event.start).toLocaleTimeString()
-          }
+          subtitle={event.subTitle}
           actions={
             <ActionPanel>{event.link && <Action.OpenInBrowser title="View Event" url={event.link} />}</ActionPanel>
           }
